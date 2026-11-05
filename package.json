@@ -1,0 +1,24 @@
+{
+  "name": "notes-api-2324802010363",
+  "version": "1.0.0",
+  "description": "Repo mẫu môn Điện toán đám mây (TDMU). Cấu hình sẵn Dev Container (Node.js 22, Docker, JDK 25 + Maven) để chạy các bài thực hành 1–6 trực tiếp trong GitHub Codespaces.",
+  "main": "index.js",
+"scripts": {
+  "start": "node src/server.js",
+  "test": "node --test"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2324802010363/notes-api-2324802010363.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/2324802010363/notes-api-2324802010363/issues"
+  },
+  "homepage": "https://github.com/2324802010363/notes-api-2324802010363#readme",
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}
