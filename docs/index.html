@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cloud Lab 01 | TDMU</title>
+<title>Cloud Lab 01 & 02 | TDMU</title>
 <style>
 :root {
   --navy: #101d35;
@@ -89,6 +89,8 @@ nav {
   font-size: 12px;
 }
 main { padding-bottom: 50px; }
+.lab-label { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: var(--teal); }
+.lab2-tags .tag { color: #08796d; border-color: #65c7b9; }
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -276,6 +278,8 @@ footer {
       <a href="#comparison">So sánh</a>
       <a href="#nist">NIST</a>
       <a href="#resources">Tài nguyên</a>
+      <a href="#lab2">Lab 02 – Nhóm F</a>
+      <a href="#discussion-lab2">Phản biện</a>
     </div>
   </div>
 </nav>
@@ -815,12 +819,449 @@ footer {
   </p>
 </section>
 
+<!-- ===================== LAB 02 ===================== -->
+
+<section class="panel" id="lab2">
+  <div class="section-head">
+    <span class="section-no">09</span>
+    <h2>LAB 02 – Ảo hóa, Container và mô phỏng trung tâm dữ liệu</h2>
+  </div>
+  <p class="lab-label">BÀI THỰC HÀNH NHÓM · 12/11/2026</p>
+  <p><b>Môn học:</b> Điện toán đám mây</p>
+  <p><b>Nhóm:</b> Nhóm F – 4 thành viên</p>
+  <p><b>Repository thực hành:</b> notes-api-2324802010363 (tài khoản Phan Thanh Thuận)</p>
+  <h3>Thành viên và phân công công việc</h3>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>STT</th><th>Thành viên</th><th>Phân công theo báo cáo nhóm</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Lê Thành Trung</td><td>Vắng</td></tr>
+        <tr><td>2</td><td>Lê Phúc Anh Huy</td><td>Bước 5–6: CloudSim Plus</td></tr>
+        <tr><td>3</td><td>Nguyễn Xuân Hương</td><td>Bước 1–2: Docker image và container</td></tr>
+        <tr><td>4</td><td>Phan Thanh Thuận</td><td>Bước 3–4: So sánh môi trường và GHCR</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Mục tiêu bài thực hành</h3>
+  <p>
+    Nhóm đóng gói ứng dụng Hello Cloud bằng Docker, chạy hai container
+    với mức tài nguyên khác nhau, so sánh container với GitHub Codespaces
+    và xuất bản image lên GitHub Container Registry (GHCR).
+  </p>
+  <p>
+    Nhóm sử dụng CloudSim Plus để mô phỏng trung tâm dữ liệu, thay đổi
+    số VM, số Cloudlet và chính sách lập lịch, sau đó so sánh kết quả
+    của bốn lần chạy.
+  </p>
+  <div class="tags lab2-tags">
+    <span class="tag">Docker</span><span class="tag">GHCR</span>
+    <span class="tag">CloudSim Plus</span><span class="tag">Nhóm F</span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <span class="section-no">10</span>
+    <h2>Phần A – Docker Container</h2>
+  </div>
+
+  <h3>1. Xây dựng Docker Image</h3>
+  <p>
+    Sử dụng Dockerfile với image nền node:22-alpine,
+    cài đặt các thư viện cần thiết bằng npm ci --omit=dev
+    và đóng gói mã nguồn API Hello Cloud.
+  </p>
+
+  <div class="api-box">
+<pre>docker build -t notes-api:1.0 .
+docker images notes-api</pre>
+  </div>
+
+  <p>
+    Kết quả image <b>notes-api:1.0</b> được tạo thành công,
+    có Disk Usage là <b>251 MB</b> và Content Size là
+    <b>63,3 MB</b>.
+  </p>
+
+  <h3>2. Chạy hai Docker Container</h3>
+  <p>
+    Từ cùng một Docker image, tiến hành tạo hai container
+    notes1 và notes2 với cấu hình tài nguyên khác nhau.
+  </p>
+
+  <div class="api-box">
+<pre>docker run -d --name notes1 -p 3000:3000 notes-api:1.0
+
+docker run -d --name notes2 -p 3001:3000 \
+  --cpus=0.5 --memory=128m notes-api:1.0
+
+docker stats --no-stream</pre>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Thông số</th>
+          <th>notes1</th>
+          <th>notes2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cổng truy cập</td>
+          <td>3000</td>
+          <td>3001</td>
+        </tr>
+        <tr>
+          <td>Giới hạn CPU</td>
+          <td>Không đặt riêng</td>
+          <td>0,5 CPU</td>
+        </tr>
+        <tr>
+          <td>Giới hạn RAM</td>
+          <td>7,756 GiB theo docker stats</td>
+          <td>128 MiB</td>
+        </tr>
+        <tr>
+          <td>RAM đang sử dụng</td>
+          <td>76,98 MiB</td>
+          <td>13,06 MiB</td>
+        </tr>
+        <tr>
+          <td>CPU theo API</td>
+          <td>2</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>RAM theo API</td>
+          <td>7,8 GB</td>
+          <td>7,8 GB</td>
+        </tr>
+        <tr>
+          <td>Trạng thái API</td>
+          <td>Thành công</td>
+          <td>Thành công</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <b>Nhận xét:</b>
+    Hai container đều hoạt động thành công và trả về dữ liệu JSON.
+    Container notes2 được giới hạn 0,5 CPU và 128 MiB RAM.
+    Tuy nhiên, API vẫn hiển thị 2 CPU và 7,8 GB RAM
+    vì thông tin do module os trả về không nhất thiết
+    phản ánh giới hạn cgroup của container.
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <span class="section-no">11</span>
+    <h2>Bảng 1 – So sánh Codespaces và Container</h2>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>GitHub Codespaces</th>
+          <th>Container notes2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Thời gian khởi động</td>
+          <td>202,77 giây</td>
+          <td>0,427 giây (phép thử container tạm)</td>
+        </tr>
+        <tr>
+          <td>Kích thước</td>
+          <td>Hạn mức lưu trữ 15 GB-tháng theo đề</td>
+          <td>Image có Disk Usage 251 MB</td>
+        </tr>
+        <tr>
+          <td>Nhân hệ điều hành</td>
+          <td>Linux kernel 6.8.0-1070-azure</td>
+          <td>Dùng chung kernel 6.8.0-1070-azure</td>
+        </tr>
+        <tr>
+          <td>Mức độ cô lập</td>
+          <td>Môi trường máy ảo, có kernel riêng với host vật lý</td>
+          <td>Cô lập ở mức tiến trình, chia sẻ kernel</td>
+        </tr>
+        <tr>
+          <td>Tài nguyên</td>
+          <td>2 CPU logic, RAM khoảng 7,8 GB theo API</td>
+          <td>Giới hạn 0,5 CPU và 128 MiB RAM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note warning">
+    <b>Lưu ý:</b>
+    Thời gian 0,427 giây được đo bằng cách chạy một container
+    tạm với lệnh Node.js đơn giản, không phải thời gian
+    API sẵn sàng nhận HTTP. Thời gian Codespaces và container
+    được đo theo hai cách khác nhau, nên chỉ dùng để tham khảo.
+    Hạn mức 15 GB-tháng cũng không phải kích thước thực của VM.
+  </div>
+
+  <p>
+    <b>Nhận xét:</b> Container có ưu điểm khởi chạy nhanh,
+    gọn nhẹ và dễ tạo nhiều bản sao. Trong khi đó, máy ảo
+    cung cấp môi trường hệ điều hành độc lập và có mức độ
+    cô lập cao hơn.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <span class="section-no">12</span>
+    <h2>Xuất bản Docker Image lên GHCR</h2>
+  </div>
+
+  <p>
+    Sử dụng Personal Access Token với quyền write:packages
+    để đăng nhập GitHub Container Registry, gắn tag
+    và đẩy Docker image lên kho lưu trữ.
+  </p>
+
+  <div class="api-box">
+<pre>docker tag notes-api:1.0 \
+  ghcr.io/2324802010363/notes-api:1.0
+
+docker push ghcr.io/2324802010363/notes-api:1.0
+
+docker pull ghcr.io/2324802010363/notes-api:1.0</pre>
+  </div>
+
+  <p>
+    Docker image đã được đẩy thành công lên GHCR và
+    package notes-api được chuyển sang chế độ Public.
+  </p>
+
+  <p>
+    Sau đó, image được tải lại từ GHCR và chạy
+    trong container notes-ghcr trên cổng 3002.
+    API trả về JSON thành công.
+  </p>
+
+  <div class="links">
+    <a class="link-card"
+       href="https://github.com/users/2324802010363/packages/container/notes-api"
+       target="_blank" rel="noopener noreferrer">
+      Xem Docker Package trên GHCR
+    </a>
+  </div>
+</section>
+
+<section class="panel" id="cloudsim">
+  <div class="section-head">
+    <span class="section-no">13</span>
+    <h2>Phần B – Mô phỏng CloudSim Plus</h2>
+  </div>
+
+  <h3>1. Chạy mô phỏng ban đầu</h3>
+  <p>
+    Sử dụng dự án cloudsimplus-examples và chạy chương trình
+    BasicFirstExample để mô phỏng trung tâm dữ liệu
+    có Host, máy ảo và các tác vụ Cloudlet.
+  </p>
+
+  <p>
+    Kết quả ban đầu gồm 1 Host có 8 lõi CPU,
+    2 VM và 4 Cloudlet. Tất cả tác vụ đều
+    hoàn thành thành công với Finish Time lớn nhất
+    là 20,1 giây.
+  </p>
+
+  <h3>2. Thay đổi các kịch bản mô phỏng</h3>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Kịch bản</th>
+          <th>Host cores</th>
+          <th>VM</th>
+          <th>Cloudlet</th>
+          <th>Thuật toán</th>
+          <th>Finish Time cuối cùng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Ban đầu</td>
+          <td>8</td>
+          <td>2</td>
+          <td>4</td>
+          <td>TimeShared</td>
+          <td>20,1 giây</td>
+        </tr>
+        <tr>
+          <td>2. Nhân đôi VM</td>
+          <td>16</td>
+          <td>4</td>
+          <td>4</td>
+          <td>TimeShared</td>
+          <td>20,1 giây</td>
+        </tr>
+        <tr>
+          <td>3. Nhân đôi Cloudlet</td>
+          <td>16</td>
+          <td>4</td>
+          <td>8</td>
+          <td>TimeShared</td>
+          <td>20,1 giây</td>
+        </tr>
+        <tr>
+          <td>4. Đổi thuật toán</td>
+          <td>16</td>
+          <td>4</td>
+          <td>8</td>
+          <td>SpaceShared</td>
+          <td>20,1 giây</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><b>Bảng 2: So sánh kết quả bốn kịch bản CloudSim Plus.</b></p>
+
+  <div class="note">
+    <b>Nhận xét kết quả:</b>
+    Cả bốn kịch bản đều có Finish Time lớn nhất là 20,1 giây.
+    Việc tăng VM hoặc Cloudlet chưa làm thay đổi thời gian
+    hoàn thành do số lượng tác vụ vẫn nằm trong khả năng
+    xử lý đồng thời của các VM.
+  </div>
+
+  <p>
+    Khi tăng số VM từ 2 lên 4, số lõi Host cũng được tăng
+    từ 8 lên 16. Do đó, kết quả phản ánh việc thay đổi
+    đồng thời hai thông số, không chỉ riêng số VM.
+  </p>
+
+  <p>
+    Khi tăng lên 8 Cloudlet trên 4 VM, mỗi VM có 4 lõi
+    và mỗi Cloudlet yêu cầu 2 lõi. Vì vậy, mỗi VM
+    có thể xử lý đồng thời hai Cloudlet.
+  </p>
+
+  <p>
+    Khi chuyển thuật toán từ TimeShared sang SpaceShared,
+    thời gian vẫn giữ nguyên vì chưa xuất hiện tình trạng
+    thiếu lõi CPU khiến Cloudlet phải chờ.
+  </p>
+</section>
+
+<section class="panel" id="discussion-lab2">
+  <div class="section-head">
+    <span class="section-no">14</span>
+    <h2>Câu hỏi phản biện – Lab 02</h2>
+  </div>
+
+  <h3>Câu 1. Vì sao API trong container notes2 vẫn báo memoryGB bằng RAM máy chủ dù đã giới hạn 128 MB? Ứng dụng Java hoặc Node.js chạy trong container cần lưu ý gì?</h3>
+  <p>
+    Trong bài thực hành, trường memoryGB lấy từ hàm <code>os.totalmem()</code>
+    của Node.js, nên phản ánh bộ nhớ hệ điều hành trả về thay vì hạn mức
+    cgroup của container notes2. Docker vẫn áp dụng giới hạn 128 MiB;
+    ở lần đo bằng <code>docker stats</code>, notes2 dùng khoảng
+    13,06 MiB trên 128 MiB.
+  </p>
+  <p>
+    Ứng dụng Java hoặc Node.js không nên dựa vào RAM máy chủ để tự quyết
+    định cấp phát bộ nhớ. Cần kiểm tra giới hạn container, đặt heap phù hợp
+    (Java có thể dùng <code>-Xmx</code> hoặc <code>-XX:MaxRAMPercentage</code>;
+    Node.js có thể dùng <code>--max-old-space-size</code>) và theo dõi nguy cơ
+    hết bộ nhớ (OOM).
+  </p>
+
+  <h3>Câu 2. Time-shared và Space-shared khác nhau ra sao trong kết quả lần 3? Một nhà cung cấp đám mây hướng thị trường sẽ chọn chính sách nào cho gói giá rẻ, vì sao?</h3>
+  <p>
+    Time-shared chia sẻ thời gian CPU giữa các Cloudlet đang chạy.
+    Space-shared cấp lõi xử lý (PE) cho Cloudlet khi đủ tài nguyên;
+    tác vụ chưa được cấp đủ lõi sẽ phải chờ.
+  </p>
+  <p>
+    Trong thử nghiệm, Finish Time lớn nhất vẫn là 20,1 giây với cả
+    TimeShared và SpaceShared. Các số liệu chưa thể hiện sự khác biệt
+    về thời gian hoàn thành trong tải thử nghiệm này.
+  </p>
+  <p>
+    Với gói giá rẻ, nhà cung cấp có thể chọn Time-shared để nâng cao
+    khả năng chia sẻ và khai thác tài nguyên, nhưng hiệu năng mỗi tác vụ
+    có thể biến động khi tải tăng. Nếu ưu tiên sự ổn định và phân bổ
+    lõi rõ ràng thì Space-shared có thể phù hợp hơn. Lựa chọn phụ thuộc
+    mục tiêu SLA và mô hình kinh doanh.
+  </p>
+
+  <h3>Câu 3. Mô phỏng giúp ích gì trước khi thuê hạ tầng thật, và kết quả mô phỏng có thể sai lệch với thực tế ở điểm nào?</h3>
+  <p>
+    Mô phỏng giúp thử nhiều cấu hình VM, số tác vụ và thuật toán lập lịch
+    trước khi thuê hạ tầng thật; từ đó ước lượng nhu cầu tài nguyên,
+    thời gian hoàn thành và chi phí.
+  </p>
+  <p>
+    Tuy nhiên, kết quả phụ thuộc mô hình và tham số đầu vào.
+    Mô phỏng có thể chưa phản ánh đầy đủ độ trễ mạng, biến động tải,
+    lỗi phần cứng, tranh chấp tài nguyên và chi phí I/O.
+    Vì vậy, đây là cơ sở tham khảo chứ không phải cam kết hiệu năng thực tế.
+  </p>
+  <div class="note">
+    <b>Kết luận Lab 2:</b> Nhóm F đã thử nghiệm Docker, GHCR và bốn kịch bản
+    CloudSim Plus. Cả bốn lần mô phỏng có Finish Time lớn nhất là 20,1 giây
+    trong điều kiện tài nguyên được cấu hình.
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <span class="section-no">15</span>
+    <h2>Liên kết sản phẩm Lab 2</h2>
+  </div>
+
+  <div class="links">
+    <a class="link-card"
+       href="https://github.com/2324802010363/notes-api-2324802010363"
+       target="_blank" rel="noopener noreferrer">
+      GitHub Repository
+    </a>
+
+    <a class="link-card"
+       href="https://github.com/users/2324802010363/packages/container/notes-api"
+       target="_blank" rel="noopener noreferrer">
+      GitHub Container Registry
+    </a>
+
+    <a class="link-card"
+       href="https://github.com/2324802010363/notes-api-2324802010363/blob/main/Dockerfile"
+       target="_blank" rel="noopener noreferrer">
+      Dockerfile
+    </a>
+
+    <a class="link-card"
+       href="https://github.com/cloudsimplus/cloudsimplus-examples"
+       target="_blank" rel="noopener noreferrer">
+      CloudSim Plus Examples
+    </a>
+  </div>
+</section>
+
+<!-- =================== KẾT THÚC LAB 02 =================== -->
+
 </main>
 
 <footer>
   <b>THU DAU MOT UNIVERSITY · CLOUD COMPUTING</b>
   <p>Lab 01 – Phan Thanh Thuận – 2324802010363</p>
-  <p>GitHub Codespaces · Node.js · Express.js · GitHub Pages</p>
+  <p>Lab 02 – Nhóm F – Lê Thành Trung · Lê Phúc Anh Huy · Nguyễn Xuân Hương · Phan Thanh Thuận</p>
+  <p>GitHub Codespaces · Docker · GHCR · CloudSim Plus · GitHub Pages</p>
 </footer>
 
 </body>
